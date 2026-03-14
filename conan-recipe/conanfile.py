@@ -5,7 +5,7 @@ import os
 
 class VKAPIConan(ConanFile):
     name = "vkapi"
-    version = "0.0.8"
+    version = "0.0.9"
     url = "https://github.com/qucals/VK-API"
     description = "C++ library for working with VK API"
     license = "Apache 2.0"
