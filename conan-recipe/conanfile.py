@@ -21,7 +21,7 @@ class VKAPIConan(ConanFile):
     generators = "CMakeDeps"
 
     def requirements(self):
-        self.requires("nlohmann_json/3.11.2")
+        self.requires("nlohmann_json/3.11.3")
         self.requires("libcurl/8.16.0")
 
     def source(self):
