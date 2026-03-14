@@ -7,7 +7,7 @@ include(GNUInstallDirs)
 
 set(VKAPI_MAJOR_VERSION 0)
 set(VKAPI_MINOR_VERSION 0)
-set(VKAPI_PATCH_VERSION 8)
+set(VKAPI_PATCH_VERSION 9)
 set(VKAPI_VERSION_STRING "${VKAPI_MAJOR_VERSION}.${VKAPI_MINOR_VERSION}.${VKAPI_PATCH_VERSION}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -40,19 +40,17 @@ endif()
 # Include headers
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_INSTALL_INCLUDEDIR})
 
-# Link nlohmann_json
-target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json)
-
-# Link curl
 if(UNIX)
     find_package(CURL REQUIRED)
+    find_package(nlohmann_json REQUIRED)
+    
     target_link_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIR})
 else()
     include(FindPkgConfig)
     pkg_check_modules(CURL libcurl REQUIRED)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
+target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl nlohmann_json::nlohmann_json)
 
 set_target_properties(
     ${PROJECT_NAME} PROPERTIES

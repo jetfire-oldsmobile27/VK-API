@@ -2,7 +2,7 @@
  * Contains information about the project's version.
  * @file Config.hpp
  * @author qucals
- * @version 0.0.8 24/08/21
+ * @version 0.0.9 24/08/21
  */
 
 #ifndef VKAPI_CONFIG_HPP_IN
@@ -29,7 +29,7 @@ typedef struct __vkapi_version
 
 #define __VKAPI_MAJOR_VERSION 0
 #define __VKAPI_MINOR_VERSION 0
-#define __VKAPI_PATCH_VERSION 8
+#define __VKAPI_PATCH_VERSION 9
 
 #ifndef __VKAPI_MAJOR_VERSION
 #define __VKAPI_MAJOR_VERSION 0

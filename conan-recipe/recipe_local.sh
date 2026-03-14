@@ -1,0 +1,1 @@
+conan export . --user qucals --channel stable
