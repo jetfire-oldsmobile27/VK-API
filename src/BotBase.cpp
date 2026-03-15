@@ -70,7 +70,11 @@ BotBase::Event BotBase::WaitForEvent()
         m_timeStamp = response.at("ts").get<std::string>();
     }
 
-    JsonType updates = response.at("updates")[0];
+    if (!response.contains("updates") || !response["updates"].is_array() || response["updates"].empty()) {
+        return Event(EVENTS::UNKNOWN, JsonType());
+    }
+
+    JsonType updates = response["updates"][0];
     std::string eventStr = updates.at("type").get<std::string>();
 
     return Event(GetTypeEvent(eventStr), updates); // NOLINT(modernize-return-braced-init-list)

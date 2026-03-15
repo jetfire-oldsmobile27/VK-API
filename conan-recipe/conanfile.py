@@ -73,4 +73,5 @@ class VKAPIConan(ConanFile):
         self.cpp_info.includedirs = ["include/vkapi"]
         self.cpp_info.set_property("cmake_file_name", "VKAPI")
         self.cpp_info.set_property("cmake_target_name", "VKAPI::VKAPI")
+        self.cpp_info.requires = ["nlohmann_json::nlohmann_json", "libcurl::libcurl"]
         self.cpp_info.resdirs = []
