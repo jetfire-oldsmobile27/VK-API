@@ -1,6 +1,6 @@
 [requires]
 nlohmann_json/3.11.2
-libcurl/8.16.0
+libcurl/8.18.0
 [generators]
 CMakeDeps
 CMakeToolchain
