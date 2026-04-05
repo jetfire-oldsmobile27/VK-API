@@ -202,7 +202,7 @@ auto BotBase::SendRequestAsync(const std::string& method, const JsonType& parame
 
 JsonType BotBase::SendRequestAsyncByMethod_(BotBase* botHandle, METHODS method, const JsonType& parametersData)
 {
-    assert(botHandle == nullptr);
+    assert(botHandle != nullptr);
     if (!botHandle->IsAuthorized()) { throw ex::NotConnectedException(); }
 
     std::string methodStr = BotBase::MethodToString(method);
