@@ -16,38 +16,33 @@ namespace base
 std::string Request::Send(const std::string& url, const std::string& postData)
 {
     CURL* curl = curl_easy_init();
+    if (!curl) return "";
 
-    if (curl) {
-        std::string errorBuf;
-        std::string callbackBuf;
+    char errorBuf[CURL_ERROR_SIZE] = {};
+    std::string callbackBuf;
 
-        errorBuf.resize(CURL_ERROR_SIZE);
+    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuf);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, USERAGENT);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, NO_APPLY_CURLOPT);
+    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, MAXREGIDS);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 35L);        
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Request::CurlWriteData);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &callbackBuf);
 
-        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuf.c_str());
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, USERAGENT);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, NO_APPLY_CURLOPT);
-        curl_easy_setopt(curl, CURLOPT_HTTPGET, NO_APPLY_CURLOPT);
-        curl_easy_setopt(curl, CURLOPT_MAXREDIRS, MAXREGIDS);
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Request::CurlWriteData);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &callbackBuf);
-
-        if (!postData.empty()) {
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
-        }
-
-        CURLcode result = curl_easy_perform(curl);
-
-        curl_easy_cleanup(curl);
-
-        if (result == CURLE_OK) {
-            return callbackBuf;
-        } else {
-            return errorBuf;
-        }
+    if (!postData.empty()) {
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)postData.size());
+    } else {
+        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
     }
 
-    return postData;
+    CURLcode result = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    return (result == CURLE_OK) ? callbackBuf : std::string(errorBuf);
 }
 
 

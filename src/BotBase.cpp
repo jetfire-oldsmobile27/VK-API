@@ -67,11 +67,25 @@ BotBase::Event BotBase::WaitForEvent()
     std::string url = m_serverUrl + "?act=a_check&";
     JsonType response = JsonType::parse(Request::Send(url, ConvertParametersDataToURL(parametersData)));
 
+    if (response.contains("failed")) {
+        int failed = response["failed"].get<int>();
+        if (failed == 1) {
+            m_timeStamp = response["ts"].get<std::string>();
+            return Event(EVENTS::UNKNOWN, JsonType());
+        } else {
+            throw ex::NotConnectedException();
+        }
+    }
+
     if (response.find("ts") != response.end()) {
         m_timeStamp = response.at("ts").get<std::string>();
     }
 
-    JsonType updates = response.at("updates")[0];
+    if (!response.contains("updates") || !response["updates"].is_array() || response["updates"].empty()) {
+        return Event(EVENTS::UNKNOWN, JsonType());
+    }
+
+    JsonType updates = response["updates"][0];
     std::string eventStr = updates.at("type").get<std::string>();
 
     return Event(GetTypeEvent(eventStr), updates);
