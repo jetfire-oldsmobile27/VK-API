@@ -22,7 +22,7 @@ class VKAPIConan(ConanFile):
 
     def requirements(self):
         self.requires("nlohmann_json/3.11.3")
-        self.requires("libcurl/8.12.1")
+        self.requires("libcurl/8.16.1")
 
     def source(self):
         get(self, "https://github.com/jetfire-oldsmobile27/VK-API/archive/refs/heads/v0.0.9.zip", strip_root=True)
