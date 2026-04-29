@@ -196,6 +196,8 @@ protected:
     std::set<std::string> m_scope;
 
     bool m_connectedToLongPoll;
+private:
+    CURL* m_curl;
 };
 
 } // namespace base

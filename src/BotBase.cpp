@@ -36,7 +36,7 @@ bool BotBase::Auth(const std::string& accessToken)
 
     const std::string method = MethodToString(METHODS::GET_LONG_POLL_SERVER);
     const std::string url = VKAPI_API_URL + method;
-    JsonType response = JsonType::parse(Request::Send(url, ConvertParametersDataToURL(parametersData)));
+    JsonType response = JsonType::parse(Request::Send(m_curl, url, ConvertParametersDataToURL(parametersData)));
 
     if (response.find("error") != response.end()) {
         throw ex::AuthFailed();
@@ -64,7 +64,7 @@ BotBase::Event BotBase::WaitForEvent()
     };
 
     std::string url = m_serverUrl + "?act=a_check&";
-    JsonType response = JsonType::parse(Request::Send(url, ConvertParametersDataToURL(parametersData)));
+    JsonType response = JsonType::parse(Request::Send(m_curl, url, ConvertParametersDataToURL(parametersData)));
 
     if (response.find("ts") != response.end()) {
         m_timeStamp = response.at("ts").get<std::string>();
@@ -174,7 +174,7 @@ JsonType BotBase::SendRequest(METHODS method, const JsonType& parametersData)
     std::string url = VKAPI_API_URL + methodStr;
 
     JsonType pData = CheckValidationParameters(parametersData);
-    JsonType response = JsonType::parse(Request::Send(url, ConvertParametersDataToURL(pData)));
+    JsonType response = JsonType::parse(Request::Send(m_curl, url, ConvertParametersDataToURL(pData)));
 
     return response;
 }
@@ -187,7 +187,7 @@ JsonType BotBase::SendRequest(const std::string& method, const JsonType& paramet
     std::string url = VKAPI_API_URL + method;
 
     JsonType pData = CheckValidationParameters(parametersData);
-    JsonType response = JsonType::parse(Request::Send(url, ConvertParametersDataToURL(pData)));
+    JsonType response = JsonType::parse(Request::Send(m_curl, url, ConvertParametersDataToURL(pData)));
 
     return response;
 }
@@ -200,31 +200,45 @@ auto BotBase::SendRequestAsync(METHODS method, const JsonType& parametersData) -
 auto BotBase::SendRequestAsync(const std::string& method, const JsonType& parametersData) -> std::future<JsonType>
 { return std::async(BotBase::SendRequestAsyncByStr_, this, method, parametersData); }
 
-JsonType BotBase::SendRequestAsyncByMethod_(BotBase* botHandle, METHODS method, const JsonType& parametersData)
+JsonType BotBase::SendRequestAsyncByMethod_(BotBase* botHandle,
+                                            METHODS method,
+                                            const JsonType& parametersData)
 {
     assert(botHandle != nullptr);
     if (!botHandle->IsAuthorized()) { throw ex::NotConnectedException(); }
+
+    CURL* asyncCurl = curl_easy_init();
+    if (!asyncCurl) { throw std::runtime_error("curl_easy_init() failed"); }
 
     std::string methodStr = BotBase::MethodToString(method);
     std::string url = VKAPI_API_URL + methodStr;
 
     JsonType pData = botHandle->CheckValidationParameters(parametersData);
-    JsonType response = JsonType::parse(Request::Send(url, botHandle->ConvertParametersDataToURL(pData)));
+    JsonType response = JsonType::parse(
+        Request::Send(asyncCurl, url, botHandle->ConvertParametersDataToURL(pData)));
 
+    curl_easy_cleanup(asyncCurl);
     return response;
 }
 
-JsonType BotBase::SendRequestAsyncByStr_(BotBase* botHandle, const std::string& method, const JsonType& parametersData)
+JsonType BotBase::SendRequestAsyncByStr_(BotBase* botHandle,
+                                         const std::string& method,
+                                         const JsonType& parametersData)
 {
-    assert(botHandle == nullptr);
+    assert(botHandle != nullptr);  // ← исправлен баг
     if (!botHandle->IsAuthorized()) { throw ex::NotConnectedException(); }
     if (method.empty()) { throw ex::EmptyArgumentException(); }
+
+    CURL* asyncCurl = curl_easy_init();
+    if (!asyncCurl) { throw std::runtime_error("curl_easy_init() failed"); }
 
     std::string url = VKAPI_API_URL + method;
 
     JsonType pData = botHandle->CheckValidationParameters(parametersData);
-    JsonType response = JsonType::parse(Request::Send(url, botHandle->ConvertParametersDataToURL(pData)));
+    JsonType response = JsonType::parse(
+        Request::Send(asyncCurl, url, botHandle->ConvertParametersDataToURL(pData)));
 
+    curl_easy_cleanup(asyncCurl);
     return response;
 }
 

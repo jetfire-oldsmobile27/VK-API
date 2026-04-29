@@ -15,7 +15,20 @@ namespace base
 
 ClientBase::ClientBase()
     : m_connectedToLongPoll(false)
-{}
+    , m_curl(curl_easy_init())
+{
+    if (!m_curl) {
+        throw std::runtime_error("curl_easy_init() failed");
+    }
+}
+
+ClientBase::~ClientBase()
+{
+    if (m_curl) {
+        curl_easy_cleanup(m_curl);
+        m_curl = nullptr;
+    }
+}
 
 void ClientBase::AddScope(std::string scope)
 { m_scope.insert(_VKAPI_MOVE(scope)); }

@@ -13,6 +13,7 @@
 
 #include <curl/curl.h> // curl
 #include <string> // string
+#include <mutex> // mutex
 
 namespace vk
 {
@@ -35,6 +36,7 @@ public:
     ~Request() = delete;
 
     Request& operator=(const Request&) = delete;
+    
 
     /**
      * @brief Sending your request to the VK server.
@@ -44,9 +46,10 @@ public:
      *
      * @retval an answer in a string.
      */
-    _VKAPI_STATIC std::string Send(const std::string& url,
+    _VKAPI_STATIC std::string Send(CURL* curl, const std::string& url,
                                    const std::string& postData);
-
+private:
+    static std::mutex s_mutex;
 protected:
     _VKAPI_STATIC std::size_t CurlWriteData(char* ptr, size_t size,
                                             size_t nmemb, std::string* data);

@@ -55,7 +55,7 @@ bool UserBase::Auth(std::string& login, std::string& password)
         { "password",      password }
     };
 
-    JsonType response = JsonType::parse(Request::Send(VKAPI_AUTH_URL,
+    JsonType response = JsonType::parse(Request::Send(m_curl, VKAPI_AUTH_URL,
                                                       ConvertParametersDataToURL(parametersData)));
 
     try {
@@ -70,7 +70,7 @@ bool UserBase::Auth(std::string& login, std::string& password)
                 std::cin >> captchaKey;
 
                 parametersData.push_back({ "captcha_key", captchaKey });
-                response = Request::Send(VKAPI_AUTH_URL, ConvertParametersDataToURL(parametersData));
+                response = Request::Send(m_curl, VKAPI_AUTH_URL, ConvertParametersDataToURL(parametersData));
             }
 
             VALIDATION_TYPES validationType = GetValidationType(response.at("validation_type"));
@@ -85,8 +85,8 @@ bool UserBase::Auth(std::string& login, std::string& password)
                     parametersData.push_back({ "2fa_app", "1" });
                 }
 
-                Request::Send(response.at("redirect_url").get<std::string>(), "");
-                Request::Send(VKAPI_AUTH_URL, ConvertParametersDataToURL(parametersData));
+                Request::Send(m_curl, response.at("redirect_url").get<std::string>(), "");
+                Request::Send(m_curl, VKAPI_AUTH_URL, ConvertParametersDataToURL(parametersData));
 
                 std::cout << "Enter code: ";
 
@@ -94,7 +94,7 @@ bool UserBase::Auth(std::string& login, std::string& password)
                 std::cin >> code;
 
                 parametersData.push_back({ "code", code });
-                response = JsonType::parse(Request::Send(VKAPI_AUTH_URL, ConvertParametersDataToURL(parametersData)));
+                response = JsonType::parse(Request::Send(m_curl, VKAPI_AUTH_URL, ConvertParametersDataToURL(parametersData)));
 
                 m_accessToken = response.at("access_token").get<std::string>();
                 m_userId = response.at("user_id").get<std::string>();
@@ -126,7 +126,7 @@ bool UserBase::Auth(const std::string& accessToken)
     const std::string method = MethodToString(METHODS::USERS_GET);
     const std::string url = VKAPI_API_URL + method;
 
-    JsonType response = JsonType::parse(Request::Send(url, ConvertParametersDataToURL(parametersData)));
+    JsonType response = JsonType::parse(Request::Send(m_curl, url, ConvertParametersDataToURL(parametersData)));
 
     try {
         if (response.find("error") != response.end()) {
@@ -198,7 +198,7 @@ JsonType UserBase::SendRequest(METHODS method, const JsonType& parametersData)
     std::string url = VKAPI_API_URL + methodStr;
 
     JsonType pData = CheckValidationParameters(parametersData);
-    JsonType response = JsonType::parse(Request::Send(url, ConvertParametersDataToURL(pData)));
+    JsonType response = JsonType::parse(Request::Send(m_curl, url, ConvertParametersDataToURL(pData)));
 
     return response;
 }
@@ -211,7 +211,7 @@ JsonType UserBase::SendRequest(const std::string& method, const JsonType& parame
     std::string url = VKAPI_API_URL + method;
 
     JsonType pData = CheckValidationParameters(parametersData);
-    JsonType response = JsonType::parse(Request::Send(url, ConvertParametersDataToURL(pData)));
+    JsonType response = JsonType::parse(Request::Send(m_curl, url, ConvertParametersDataToURL(pData)));
 
     return response;
 }

@@ -12,30 +12,36 @@ namespace vk
 
 namespace base
 {
+CURL* Request::s_curl = nullptr;
+std::mutex Request::s_mutex;
 
-std::string Request::Send(const std::string& url, const std::string& postData)
+std::string Request::Send(CURL* curl,
+                          const std::string& url,
+                          const std::string& postData)
 {
-    CURL* curl = curl_easy_init();
     if (!curl) return "";
+
+    curl_easy_reset(curl);
 
     char errorBuf[CURL_ERROR_SIZE] = {};
     std::string callbackBuf;
 
-    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuf);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, USERAGENT);
+    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER,  errorBuf);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT,    USERAGENT);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, NO_APPLY_CURLOPT);
-    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, MAXREGIDS);
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_MAXREDIRS,    MAXREGIDS);
+    curl_easy_setopt(curl, CURLOPT_URL,          url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Request::CurlWriteData);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &callbackBuf);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,    &callbackBuf);
+    curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
 
     if (!postData.empty()) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
+    } else {
+        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
     }
 
     CURLcode result = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-
     return (result == CURLE_OK) ? callbackBuf : std::string(errorBuf);
 }
 
