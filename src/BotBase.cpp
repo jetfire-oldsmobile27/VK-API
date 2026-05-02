@@ -200,6 +200,14 @@ auto BotBase::SendRequestAsync(METHODS method, const JsonType& parametersData) -
 auto BotBase::SendRequestAsync(const std::string& method, const JsonType& parametersData) -> std::future<JsonType>
 { return std::async(BotBase::SendRequestAsyncByStr_, this, method, parametersData); }
 
+struct CurlDeleter {
+    void operator()(CURL* curl) const {
+        if (curl) {
+            curl_easy_cleanup(curl);
+        }
+    }
+};
+
 JsonType BotBase::SendRequestAsyncByMethod_(BotBase* botHandle,
                                             METHODS method,
                                             const JsonType& parametersData)
@@ -207,17 +215,18 @@ JsonType BotBase::SendRequestAsyncByMethod_(BotBase* botHandle,
     assert(botHandle != nullptr);
     if (!botHandle->IsAuthorized()) { throw ex::NotConnectedException(); }
 
-    CURL* asyncCurl = curl_easy_init();
-    if (!asyncCurl) { throw std::runtime_error("curl_easy_init() failed"); }
+    std::unique_ptr<CURL, CurlDeleter> asyncCurl(curl_easy_init());
+    if (!asyncCurl) { 
+        throw std::runtime_error("curl_easy_init() failed"); 
+    }
 
     std::string methodStr = BotBase::MethodToString(method);
     std::string url = VKAPI_API_URL + methodStr;
 
     JsonType pData = botHandle->CheckValidationParameters(parametersData);
     JsonType response = JsonType::parse(
-        Request::Send(asyncCurl, url, botHandle->ConvertParametersDataToURL(pData)));
+        Request::Send(asyncCurl.get(), url, botHandle->ConvertParametersDataToURL(pData)));
 
-    curl_easy_cleanup(asyncCurl);
     return response;
 }
 

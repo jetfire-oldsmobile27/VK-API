@@ -1,11 +1,13 @@
 /**
  * Contains additional functions for working with the library.
- * @file Utilities.hpp
+ * @file Utilities.cpp
  * @author qucals
- * @version 0.0.7 24/08/21
+ * @version 0.0.9 02/05/26
  */
 
 #include "Utilities.hpp"
+#include <memory>
+#include <curl/curl.h>
 
 namespace vk
 {
@@ -13,21 +15,57 @@ namespace vk
 namespace utilities
 {
 
+struct CurlHandle {
+    CURL* handle;
+    
+    CurlHandle() : handle(curl_easy_init()) {}
+    
+    ~CurlHandle() {
+        if (handle) {
+            curl_easy_cleanup(handle);
+        }
+    }
+    
+    CurlHandle(const CurlHandle&) = delete;
+    CurlHandle& operator=(const CurlHandle&) = delete;
+    
+    CurlHandle(CurlHandle&& other) noexcept : handle(other.handle) {
+        other.handle = nullptr;
+    }
+    
+    CurlHandle& operator=(CurlHandle&& other) noexcept {
+        if (this != &other) {
+            if (handle) {
+                curl_easy_cleanup(handle);
+            }
+            handle = other.handle;
+            other.handle = nullptr;
+        }
+        return *this;
+    }
+    
+    explicit operator bool() const { return handle != nullptr; }
+    CURL* get() const { return handle; }
+};
+
+
 std::string ConvertStrToUrlCode(const std::string& str)
 {
-    std::string temp(str);
-    CURL* curl = curl_easy_init();
-
-    if (curl) {
-        char* output = curl_easy_escape(curl, str.c_str(), static_cast<int>(str.length()));
-
-        if (output) {
-            temp = output;
-            curl_free(output);
-        }
-        curl_easy_cleanup(curl);
+    CurlHandle curl;
+    
+    if (!curl) {
+        return str;
     }
-    return temp;
+    
+    char* output = curl_easy_escape(curl.get(), str.c_str(), static_cast<int>(str.length()));
+    
+    if (!output) {
+        return str;  
+    }
+    
+    std::unique_ptr<char, decltype(&curl_free)> escaped(output, curl_free);
+    
+    return std::string(escaped.get());
 }
 
 std::string ToString(int val)
