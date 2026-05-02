@@ -12,7 +12,6 @@ namespace vk
 
 namespace base
 {
-CURL* Request::s_curl = nullptr;
 std::mutex Request::s_mutex;
 
 std::string Request::Send(CURL* curl,

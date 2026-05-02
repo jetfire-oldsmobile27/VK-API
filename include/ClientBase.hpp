@@ -102,6 +102,7 @@ class ClientBase
 {
 public:
     ClientBase();
+    virtual ~ClientBase();
 
     /**
      * @brief The function of authorization by access token.
@@ -196,8 +197,8 @@ protected:
     std::set<std::string> m_scope;
 
     bool m_connectedToLongPoll;
-private:
     CURL* m_curl;
+    
 };
 
 } // namespace base
